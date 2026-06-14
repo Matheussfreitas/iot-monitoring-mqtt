@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard IoT MQTT</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="./script.js"></script>
+</head>
+<body>
+  <main class="container">
+    <h1>Dashboard IoT MQTT</h1>
+    <p class="subtitle">Monitoramento em tempo real de temperatura e umidade</p>
+
+    <section class="cards">
+      <div class="card">
+        <h2>Temperatura</h2>
+        <strong id="temperature">-- °C</strong>
+      </div>
+
+      <div class="card">
+        <h2>Umidade</h2>
+        <strong id="humidity">-- %</strong>
+      </div>
+
+      <div class="card">
+        <h2>Sensor</h2>
+        <strong id="device">--</strong>
+      </div>
+    </section>
+
+    <section class="log">
+      <h2>Últimas leituras</h2>
+      <ul id="readings"></ul>
+    </section>
+  </main>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
