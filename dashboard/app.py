@@ -1,4 +1,6 @@
 import json
+from pathlib import Path
+
 import paho.mqtt.client as mqtt
 from flask import Flask, render_template
 from flask_socketio import SocketIO
@@ -7,7 +9,13 @@ MQTT_BROKER = "localhost"
 MQTT_PORT = 1883
 MQTT_TOPIC = "iot/sala/dados"
 
-app = Flask(__name__)
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+app = Flask(
+    __name__,
+    template_folder=str(BASE_DIR / "templates"),
+    static_folder=str(BASE_DIR / "templates"),
+)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 def on_message(client, userdata, message):
