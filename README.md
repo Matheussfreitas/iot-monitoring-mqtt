@@ -1,6 +1,6 @@
 # IoT Monitoring MQTT
 
-Projeto simples de monitoramento IoT com MQTT. O repositório contém um broker Mosquitto em Docker, scripts Python para publicar e consumir mensagens MQTT e um dashboard Flask que recebe dados do broker e atualiza a interface em tempo real com Socket.IO.
+Projeto simples de monitoramento IoT com MQTT. O fluxo principal sobe um broker Mosquitto, executa um publisher Python que simula um sensor de sala e mostra as leituras em um dashboard Flask atualizado em tempo real com Socket.IO.
 
 ## Mapa dos arquivos
 
@@ -12,9 +12,9 @@ Projeto simples de monitoramento IoT com MQTT. O repositório contém um broker 
 │   └── config/
 │       └── mosquitto.conf     # Configuração do broker MQTT
 ├── publisher/
-│   └── publisher.py           # Publicador de temperatura de exemplo
+│   └── publisher.py           # Simula o sensor e publica os dados consumidos pelo dashboard
 ├── subscriber/
-│   └── subscriber.py          # Consumidor de temperatura de exemplo
+│   └── subscriber.py          # Consumidor MQTT simples mantido como exemplo auxiliar
 ├── templates/
 │   ├── index.html             # Tela do dashboard
 │   ├── script.js              # Cliente Socket.IO do dashboard
@@ -52,12 +52,18 @@ docker compose up -d
 
 O Mosquitto ficará disponível em `localhost:1883`.
 
-## Executando o exemplo simples
+## Executando a aplicação
 
-Em um terminal, inicie o subscriber:
+Inicie o servidor web:
 
 ```bash
-python subscriber/subscriber.py
+python dashboard/app.py
+```
+
+Acesse o dashboard:
+
+```text
+http://localhost:5000
 ```
 
 Em outro terminal, inicie o publisher:
@@ -66,41 +72,44 @@ Em outro terminal, inicie o publisher:
 python publisher/publisher.py
 ```
 
-Esse fluxo usa o tópico `casa/sala/temperatura` e envia apenas um valor numérico de temperatura a cada 2 segundos.
+O publisher publica uma nova leitura a cada 2 segundos no tópico `iot/sala/dados`. O `dashboard/app.py` assina esse mesmo tópico, recebe o JSON publicado e envia os dados para o navegador pelo evento Socket.IO `mqtt_data`.
 
-## Executando o dashboard
+## Payload MQTT
 
-Inicie o servidor web:
-
-```bash
-python dashboard/app.py
-```
-
-Acesse:
-
-```text
-http://localhost:5000
-```
-
-O dashboard assina o tópico `iot/sala/dados` e espera mensagens JSON neste formato:
+Cada mensagem publicada pelo sensor simulado segue este formato:
 
 ```json
 {
   "device_id": "sensor-sala-01",
   "temperature": 24.8,
-  "humidity": 61,
-  "timestamp": "2026-06-14 10:30:00"
+  "humidity": 61.5,
+  "timestamp": "2026-06-15 10:30:00"
 }
 ```
 
-Para testar o dashboard manualmente, publique uma mensagem nesse tópico usando qualquer cliente MQTT conectado em `localhost:1883`.
+Campos usados pelo dashboard:
 
-## Tópicos MQTT usados
+- `device_id`: identificação do sensor exibida na tela.
+- `temperature`: temperatura atual em graus Celsius.
+- `humidity`: umidade atual em porcentagem.
+- `timestamp`: data e hora da leitura exibida no histórico.
 
-| Tópico | Usado por | Payload esperado |
-| --- | --- | --- |
-| `casa/sala/temperatura` | `publisher.py` e `subscriber.py` | Número com a temperatura |
-| `iot/sala/dados` | `dashboard/app.py` | JSON com `device_id`, `temperature`, `humidity` e `timestamp` |
+## Fluxo dos dados
+
+1. `publisher/publisher.py` monta o JSON do sensor.
+2. O publisher envia a mensagem para o Mosquitto em `localhost:1883`.
+3. `dashboard/app.py` está inscrito em `iot/sala/dados`.
+4. Ao receber a mensagem MQTT, o dashboard decodifica o JSON.
+5. O Flask-SocketIO emite o evento `mqtt_data` para a página aberta.
+6. `templates/script.js` atualiza temperatura, umidade, dispositivo e histórico.
+
+## Tópico MQTT principal
+
+| Tópico | Publicado por | Consumido por | Payload |
+| --- | --- | --- | --- |
+| `iot/sala/dados` | `publisher/publisher.py` | `dashboard/app.py` | JSON com `device_id`, `temperature`, `humidity` e `timestamp` |
+
+O `subscriber/subscriber.py` ainda existe apenas como exemplo auxiliar de consumo MQTT simples. O fluxo real da aplicação é o publisher enviando para o dashboard pelo tópico `iot/sala/dados`.
 
 ## Encerrando
 
