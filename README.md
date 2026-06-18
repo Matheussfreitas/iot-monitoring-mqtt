@@ -14,7 +14,7 @@ Projeto simples de monitoramento IoT com MQTT. O fluxo principal sobe um broker 
 ├── publisher/
 │   └── publisher.py           # Simula o sensor e publica os dados consumidos pelo dashboard
 ├── subscriber/
-│   └── subscriber.py          # Consumidor MQTT simples mantido como exemplo auxiliar
+│   └── subscriber.py          # Monitora no terminal os mesmos dados recebidos pelo dashboard
 ├── templates/
 │   ├── index.html             # Tela do dashboard
 │   ├── script.js              # Cliente Socket.IO do dashboard
@@ -74,6 +74,14 @@ python publisher/publisher.py
 
 O publisher publica uma nova leitura a cada 2 segundos no tópico `iot/sala/dados`. O `dashboard/app.py` assina esse mesmo tópico, recebe o JSON publicado e envia os dados para o navegador pelo evento Socket.IO `mqtt_data`.
 
+Opcionalmente, em um terceiro terminal, rode o subscriber para acompanhar as mesmas mensagens pelo terminal:
+
+```bash
+python subscriber/subscriber.py
+```
+
+O subscriber também assina `iot/sala/dados`, decodifica o JSON e imprime uma linha resumida com horário, sensor, temperatura e umidade. Ele é útil para validar se o broker está recebendo as mensagens mesmo sem olhar o dashboard.
+
 ## Payload MQTT
 
 Cada mensagem publicada pelo sensor simulado segue este formato:
@@ -98,18 +106,19 @@ Campos usados pelo dashboard:
 
 1. `publisher/publisher.py` monta o JSON do sensor.
 2. O publisher envia a mensagem para o Mosquitto em `localhost:1883`.
-3. `dashboard/app.py` está inscrito em `iot/sala/dados`.
-4. Ao receber a mensagem MQTT, o dashboard decodifica o JSON.
-5. O Flask-SocketIO emite o evento `mqtt_data` para a página aberta.
-6. `templates/script.js` atualiza temperatura, umidade, dispositivo e histórico.
+3. `dashboard/app.py` está inscrito em `iot/sala/dados` para atualizar a interface.
+4. `subscriber/subscriber.py` também pode assinar `iot/sala/dados` para monitorar as mensagens no terminal.
+5. Ao receber a mensagem MQTT, o dashboard decodifica o JSON.
+6. O Flask-SocketIO emite o evento `mqtt_data` para a página aberta.
+7. `templates/script.js` atualiza temperatura, umidade, dispositivo e histórico.
 
 ## Tópico MQTT principal
 
 | Tópico | Publicado por | Consumido por | Payload |
 | --- | --- | --- | --- |
-| `iot/sala/dados` | `publisher/publisher.py` | `dashboard/app.py` | JSON com `device_id`, `temperature`, `humidity` e `timestamp` |
+| `iot/sala/dados` | `publisher/publisher.py` | `dashboard/app.py` e `subscriber/subscriber.py` | JSON com `device_id`, `temperature`, `humidity` e `timestamp` |
 
-O `subscriber/subscriber.py` ainda existe apenas como exemplo auxiliar de consumo MQTT simples. O fluxo real da aplicação é o publisher enviando para o dashboard pelo tópico `iot/sala/dados`.
+O subscriber não substitui o dashboard. Ele serve como uma leitura técnica do mesmo fluxo MQTT, útil para conferir rapidamente o que está trafegando no broker.
 
 ## Encerrando
 
