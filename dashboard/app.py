@@ -15,6 +15,7 @@ app = Flask(
     __name__,
     template_folder=str(BASE_DIR / "templates"),
     static_folder=str(BASE_DIR / "templates"),
+    static_url_path="/static",
 )
 socketio = SocketIO(app, cors_allowed_origins="*")
 
@@ -22,7 +23,7 @@ def on_message(client, userdata, message):
     data = json.loads(message.payload.decode())
     socketio.emit("mqtt_data", data)
 
-mqtt_client = mqtt.Client()
+mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqtt_client.on_message = on_message
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
 mqtt_client.subscribe(MQTT_TOPIC)
