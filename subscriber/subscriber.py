@@ -1,5 +1,6 @@
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -23,19 +24,37 @@ def on_connect(client, userdata, flags, reason_code, properties):
 
 
 def on_message(client, userdata, message):
-    raw_payload = message.payload.decode()
+    received_at = datetime.now()
 
+    raw_payload = message.payload.decode()
     try:
         payload = json.loads(raw_payload)
     except json.JSONDecodeError:
         print(f"Mensagem ignorada: payload não é JSON válido: {raw_payload}")
         return
 
-    insert_reading(payload)
+    latencia_ms = None
+    sent_at_str = payload.get("sent_at")
+    if sent_at_str:
+        try:
+            sent_at = datetime.fromisoformat(sent_at_str)
+            latencia_ms = round((received_at - sent_at).total_seconds() * 1000, 2)
+        except ValueError:
+            pass
 
+    record = {
+        **payload,
+        "sent_at": sent_at_str,
+        "received_at": received_at.isoformat(),
+        "latencia_ms": latencia_ms,
+    }
+    insert_reading(record)
+
+    latencia_info = f" | Latência: {latencia_ms} ms" if latencia_ms is not None else ""
     print(
         f"[{payload.get('timestamp')}] {payload.get('device_id')} | "
         f"Temperatura: {payload.get('temperature')} °C | Umidade: {payload.get('humidity')} %"
+        f"{latencia_info}"
     )
 
 

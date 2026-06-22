@@ -10,20 +10,91 @@
     <h1>Dashboard IoT MQTT</h1>
     <p class="subtitle">Monitoramento em tempo real de temperatura e umidade</p>
 
+    <div class="sensor-selector">
+      <label for="sensor-select">Sensor</label>
+      <select id="sensor-select" onchange="onSensorChange()">
+        <option value="">Todos</option>
+      </select>
+    </div>
+
     <section class="cards">
       <div class="card">
         <h2>Temperatura</h2>
         <strong id="temperature">-- °C</strong>
       </div>
-
       <div class="card">
         <h2>Umidade</h2>
         <strong id="humidity">-- %</strong>
       </div>
-
       <div class="card">
         <h2>Sensor</h2>
         <strong id="device">--</strong>
+      </div>
+      <div class="card">
+        <h2>Latência</h2>
+        <div class="latencia-vals">
+          <span>mín <strong id="lat-min">--</strong></span>
+          <span>avg <strong id="lat-avg">--</strong></span>
+          <span>máx <strong id="lat-max">--</strong></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="controle">
+      <h2>Controle do Sensor</h2>
+
+      <div class="controle-grid">
+        <div class="controle-grupo">
+          <label for="intervalo">Intervalo de publicação (s)</label>
+          <div class="controle-row">
+            <input type="range" id="intervalo" min="1" max="30" step="1" value="2" />
+            <span id="intervalo-val">2s</span>
+          </div>
+          <button onclick="enviarComando({ intervalo: parseFloat(document.getElementById('intervalo').value) })">Aplicar</button>
+        </div>
+
+        <div class="controle-grupo">
+          <label>Faixa de Temperatura (°C)</label>
+          <div class="controle-row">
+            <input type="number" id="temp_min" placeholder="Mín" step="0.5" />
+            <span>–</span>
+            <input type="number" id="temp_max" placeholder="Máx" step="0.5" />
+          </div>
+          <button onclick="enviarComando({ temp_min: parseFloat(document.getElementById('temp_min').value), temp_max: parseFloat(document.getElementById('temp_max').value) })">Aplicar</button>
+        </div>
+
+        <div class="controle-grupo">
+          <label>Faixa de Umidade (%)</label>
+          <div class="controle-row">
+            <input type="number" id="humidity_min" placeholder="Mín" step="0.5" />
+            <span>–</span>
+            <input type="number" id="humidity_max" placeholder="Máx" step="0.5" />
+          </div>
+          <button onclick="enviarComando({ humidity_min: parseFloat(document.getElementById('humidity_min').value), humidity_max: parseFloat(document.getElementById('humidity_max').value) })">Aplicar</button>
+        </div>
+
+        <div class="controle-grupo">
+          <label for="falha_prob">Prob. de falha de conexão</label>
+          <div class="controle-row">
+            <input type="range" id="falha_prob" min="0" max="1" step="0.05" value="0" />
+            <span id="falha-prob-val">0%</span>
+          </div>
+          <button onclick="enviarComando({ falha_prob: parseFloat(document.getElementById('falha_prob').value) })">Aplicar</button>
+        </div>
+
+        <div class="controle-grupo">
+          <label for="falha_duracao_max">Duração máx. da falha (s)</label>
+          <div class="controle-row">
+            <input type="number" id="falha_duracao_max" min="1" max="30" step="1" value="5" />
+          </div>
+          <button onclick="enviarComando({ falha_duracao_max: parseFloat(document.getElementById('falha_duracao_max').value) })">Aplicar</button>
+        </div>
+
+        <div class="controle-grupo controle-pausa">
+          <label>Estado do Publisher</label>
+          <button id="btn-pausa" onclick="togglePausa()">Pausar</button>
+          <span id="status-pausa" class="status-ativo">Ativo</span>
+        </div>
       </div>
     </section>
 
