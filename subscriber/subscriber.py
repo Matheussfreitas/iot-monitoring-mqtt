@@ -1,7 +1,12 @@
 import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import paho.mqtt.client as mqtt
 
+from database.db import init_db, insert_reading
 
 MQTT_BROKER = "localhost"
 MQTT_PORT = 1883
@@ -26,16 +31,15 @@ def on_message(client, userdata, message):
         print(f"Mensagem ignorada: payload não é JSON válido: {raw_payload}")
         return
 
-    device_id = payload.get("device_id", "desconhecido")
-    temperature = payload.get("temperature", "sem leitura")
-    humidity = payload.get("humidity", "sem leitura")
-    timestamp = payload.get("timestamp", "sem horário")
+    insert_reading(payload)
 
     print(
-        f"[{timestamp}] {device_id} | "
-        f"Temperatura: {temperature} °C | Umidade: {humidity} %"
+        f"[{payload.get('timestamp')}] {payload.get('device_id')} | "
+        f"Temperatura: {payload.get('temperature')} °C | Umidade: {payload.get('humidity')} %"
     )
 
+
+init_db()
 
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 client.on_connect = on_connect

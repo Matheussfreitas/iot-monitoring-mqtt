@@ -18,7 +18,7 @@ def build_sensor_payload():
         "device_id": DEVICE_ID,
         "temperature": round(random.uniform(20, 30), 2),
         "humidity": round(random.uniform(45, 75), 2),
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
     }
 
 

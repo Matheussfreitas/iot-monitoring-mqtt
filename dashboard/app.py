@@ -1,13 +1,11 @@
-import json
+import sys
 from pathlib import Path
 
-import paho.mqtt.client as mqtt
-from flask import Flask, render_template
-from flask_socketio import SocketIO
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-MQTT_BROKER = "localhost"
-MQTT_PORT = 1883
-MQTT_TOPIC = "iot/sala/dados"
+from flask import Flask, jsonify, render_template
+
+from database.db import get_latest_readings
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -17,21 +15,17 @@ app = Flask(
     static_folder=str(BASE_DIR / "templates"),
     static_url_path="/static",
 )
-socketio = SocketIO(app, cors_allowed_origins="*")
 
-def on_message(client, userdata, message):
-    data = json.loads(message.payload.decode())
-    socketio.emit("mqtt_data", data)
-
-mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-mqtt_client.on_message = on_message
-mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
-mqtt_client.subscribe(MQTT_TOPIC)
-mqtt_client.loop_start()
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
+
+@app.route("/api/dados")
+def dados():
+    return jsonify(get_latest_readings(limit=10))
+
+
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
