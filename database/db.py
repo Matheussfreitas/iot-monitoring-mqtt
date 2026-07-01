@@ -91,7 +91,11 @@ def insert_reading(data: dict):
                 data.get("latencia_ms"),
             ),
         )
-        conn.execute("DELETE FROM readings WHERE timestamp < datetime('now', '-24 hours')")
+        conn.execute("""
+            DELETE FROM readings
+            WHERE datetime(COALESCE(received_at, sent_at, timestamp)) IS NOT NULL
+              AND datetime(COALESCE(received_at, sent_at, timestamp)) < datetime('now', '-24 hours')
+        """)
 
 
 def get_latest_readings(limit: int = 10, device_id: str = None) -> list:
@@ -114,8 +118,13 @@ def get_latest_readings(limit: int = 10, device_id: str = None) -> list:
 def get_sensores() -> list:
     with get_connection() as conn:
         rows = conn.execute(
-            "SELECT device_id, MAX(timestamp) as ultimo_dado"
-            " FROM readings GROUP BY device_id ORDER BY ultimo_dado DESC"
+            "SELECT r.device_id, r.timestamp as ultimo_dado"
+            " FROM readings r"
+            " JOIN ("
+            "   SELECT device_id, MAX(id) as ultimo_id"
+            "   FROM readings GROUP BY device_id"
+            " ) ultimos ON ultimos.ultimo_id = r.id"
+            " ORDER BY r.id DESC"
         ).fetchall()
     return [dict(row) for row in rows]
 

@@ -69,12 +69,13 @@ def on_message(client, userdata, message):
 
 
 def build_payload() -> dict:
+    now = datetime.now()
     return {
         "device_id": DEVICE_ID,
         "temperature": round(random.uniform(config["temp_min"], config["temp_max"]), 2),
         "humidity": round(random.uniform(config["humidity_min"], config["humidity_max"]), 2),
-        "timestamp": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
-        "sent_at": datetime.now().isoformat(),
+        "timestamp": now.isoformat(sep=" ", timespec="seconds"),
+        "sent_at": now.isoformat(),
     }
 
 
